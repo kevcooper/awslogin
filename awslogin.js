@@ -1,57 +1,48 @@
-document.querySelectorAll(".saml-role .saml-radio").forEach(elem => {
-  elem.addEventListener('change', e => {
-    document.querySelectorAll(".saml-role .saml-radio").forEach(elem => {
-      if (elem.azbuttons !== undefined) {
-        elem.azbuttons.remove()
-        elem.azbuttons = undefined
-      }
-    })
+const changeHandler = e => {
+  document.getElementsByName('azbuttons').forEach(b => b.remove())
 
-    const [account_id, role_name] = elem.value.split(":").slice(4, 6)
+  const web = document.createElement('a')
+  web.innerText = 'Web'
+  web.className = 'amzn_button'
+  web.href = '#'
+  web.onclick = e => {
+    e.stopPropagation()
+    document.saml_form.submit()
+  }
 
-    const web = document.createElement('a')
-    web.innerText = 'Web'
-    web.className = 'amzn_button'
-    web.href = '#'
-    web.onclick = e => {
-      e.stopPropagation()
-      checkRadio(e.target.parentElement.parentElement)
-      document.saml_form.submit()
-    }
+  const cli = document.createElement('a')
+  cli.innerText = 'CLI'
+  cli.className = 'amzn_button'
+  cli.href = '#'
+  cli.onclick = e => {
+    e.stopPropagation()
 
-    const cli = document.createElement('a')
-    cli.innerText = 'CLI'
-    cli.className = 'amzn_button'
-    cli.href = '#'
-    cli.onclick = e => {
-      e.stopPropagation()
+    const form = document.saml_form
+    const checked = [...form.elements.roleIndex].filter(x => x.checked)[0]
+    const [account_id, role_name] = checked.value.split(":").slice(4, 6)
 
-      checkRadio(e.target.parentElement.parentElement)
+    form.action = 'https://3hfe2t94z2.execute-api.us-west-2.amazonaws.com/dev/generate'
+    form.SAMLResponse.name = 'assertion'
 
-      const form = document.saml_form
-      const checked = [...form.elements.roleIndex].filter(x => x.checked)[0]
-      const [account_id, role_name] = checked.value.split(":").slice(4, 6)
+    form.name.name = 'role_name'
+    form.role_name.value = role_name
 
-      form.action = 'https://3hfe2t94z2.execute-api.us-west-2.amazonaws.com/dev/generate'
-      form.SAMLResponse.name = 'assertion'
+    form.portal.name = 'account_id'
+    form.account_id.value = account_id
 
-      form.name.name = 'role_name'
-      form.role_name.value = role_name
+    form.submit()
+  }
 
-      form.portal.name = 'account_id'
-      form.account_id.value = account_id
+  const div = document.createElement("div")
+  div.setAttribute("style", "display: inline-block;")
+  div.setAttribute('name', 'azbuttons')
+  div.appendChild(web)
+  div.appendChild(cli)
+  e.target.parentElement.appendChild(div)
+}
 
-      form.submit()
-    }
-
-    const div = document.createElement("div")
-    div.setAttribute("style", "display: inline-block;")
-    div.appendChild(web)
-    div.appendChild(cli)
-
-    elem.azbuttons = div
-    elem.parentElement.appendChild(div)
-  })
+document.saml_form.roleIndex.forEach(elem => {
+  elem.addEventListener('change', changeHandler)
 })
 
 document.getElementById('signin_button').remove()
